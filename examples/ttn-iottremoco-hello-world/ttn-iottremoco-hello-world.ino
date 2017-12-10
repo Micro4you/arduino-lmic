@@ -33,6 +33,15 @@
 #include <hal/hal.h>
 #include <SPI.h>
 
+// This will redirect the serial prints to the USB.
+#if defined(ARDUINO_SAMD_ZERO) && defined(SERIAL_PORT_USBVIRTUAL)
+  // Required for Serial on Zero based boards
+  #define Serial SERIAL_PORT_USBVIRTUAL
+#endif
+
+// User LED
+#define TREMOCO_LED 38
+
 // This EUI must be in little-endian format, so least-significant-byte
 // first. When copying an EUI from ttnctl output, this means to reverse
 // the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3,
@@ -104,6 +113,15 @@ void onEvent (ev_t ev) {
             break;
         case EV_TXCOMPLETE:
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
+
+            digitalWrite(TREMOCO_LED, HIGH);
+            delay(200);
+            digitalWrite(TREMOCO_LED, LOW);
+            delay(200);
+            digitalWrite(TREMOCO_LED, HIGH);
+            delay(200);
+            digitalWrite(TREMOCO_LED, LOW);
+
             if (LMIC.txrxFlags & TXRX_ACK)
               Serial.println(F("Received ack"));
             if (LMIC.dataLen) {
@@ -151,6 +169,8 @@ void do_send(osjob_t* j){
 void setup() {
     Serial.begin(9600);
     Serial.println(F("Starting"));
+    pinMode(TREMOCO_LED, OUTPUT);
+    digitalWrite(TREMOCO_LED, LOW);
 
     #ifdef VCC_ENABLE
     // For Pinoccio Scout boards
